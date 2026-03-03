@@ -1,6 +1,7 @@
 import express from 'express'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
+import authRoute from './routes/authRoute.js'
 
 const app = express()
 
@@ -20,5 +21,8 @@ app.use(cors({
 app.get("/", (req, res) => {
     res.json({ message: "API is running..." })
 })
+
+// auth routes
+app.use("/api/auth", authRoute)
 
 export default app
