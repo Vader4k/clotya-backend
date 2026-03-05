@@ -12,17 +12,17 @@ const colorSchema = new mongoose.Schema({
 
 const productSchema = new mongoose.Schema(
     {
-        slug: { type: String, unique: true, require: true },
-        sku: { type: String, unique: true, require: true },
+        slug: { type: String, unique: true, required: true },
+        sku: { type: String, unique: true, required: true },
 
-        name: { type: String, require: true, require: true },
+        name: { type: String, required: true },
 
         tags: [String],
 
-        description: { type: String, require: true },
-        shortDescription: { type: String, require: true },
+        description: { type: String, required: true },
+        shortDescription: { type: String, required: true },
 
-        price: { type: Number, require: true },
+        price: { type: Number, required: true },
         discountPrice: { type: Number, default: null },
         discountPercentage: { type: Number, default: null },
 

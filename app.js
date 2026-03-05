@@ -2,6 +2,8 @@ import express from 'express'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import authRoute from './routes/authRoute.js'
+import productRoute from './routes/productRoutes.js'
+import cartRoute from './routes/cartRoutes.js'
 
 const app = express()
 
@@ -10,7 +12,7 @@ app.use(express.json())
 app.use(cookieParser())
 
 app.use(cors({
-    origin: ["http://localhost:3000", 'clotya-ccb1.vercel.app'],
+    origin: ["http://localhost:3000", 'https://clotya-ccb1.vercel.app'],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -24,5 +26,11 @@ app.get("/", (req, res) => {
 
 // auth routes
 app.use("/api/auth", authRoute)
+
+// product routes
+app.use("/api/products", productRoute)
+
+// cart routes
+app.use("/api/cart", cartRoute)
 
 export default app
