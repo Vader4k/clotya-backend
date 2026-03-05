@@ -33,4 +33,7 @@ app.use("/api/products", productRoute)
 // cart routes
 app.use("/api/cart", cartRoute)
 
+// category routes
+app.use("/api/categories", categoryRoute)
+
 export default app
