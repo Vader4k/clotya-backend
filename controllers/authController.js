@@ -66,12 +66,37 @@ export const loginUser = async (req, res) => {
             maxAge: 7 * 24 * 60 * 60 * 1000
         })
 
-        // Send user info (excluding password) if needed by the frontend
-        const { password: _, ...userWithoutPassword } = user.toObject()
-
         res.status(200).json({
             message: "user logged in successfully",
-            user: userWithoutPassword
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: "internal server error" })
+    }
+}
+
+export const logoutUser = async (req, res) => {
+    try {
+        res.clearCookie("token")
+        res.status(200).json({ message: "user logged out successfully" })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: "internal server error" })
+    }
+}
+
+export const getMe = async (req, res) => {
+    if(!req.user){
+        return res.status(401).json({ message: "unauthorized" })
+    }
+    try {
+        const user = await User.findById(req.user.id).select("-password")
+        if (!user) {
+            return res.status(404).json({ message: "user not found" })
+        }
+        res.status(200).json({
+            message: "user fetched successfully",
+            user
         })
     } catch (error) {
         console.log(error)
