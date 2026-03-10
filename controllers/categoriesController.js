@@ -2,10 +2,31 @@ import { Category } from "../models/category.model.js";
 
 export const getAllCategories = async (req, res) => {
     try {
-        const categories = await Category.find();
-        if (!categories) {
+        const categories = await Category.aggregate([
+            {
+                $lookup: {
+                    from: "products",
+                    localField: "_id",
+                    foreignField: "category",
+                    as: "categoryProducts"
+                }
+            },
+            {
+                $addFields: {
+                    items: { $size: "$categoryProducts" }
+                }
+            },
+            {
+                $project: {
+                    categoryProducts: 0
+                }
+            }
+        ]);
+
+        if (!categories || categories.length === 0) {
             return res.status(404).json({ message: "No categories found" });
         }
+
         res.status(200).json({
             success: true,
             message: "Categories fetched successfully",

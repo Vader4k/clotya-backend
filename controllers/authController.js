@@ -6,6 +6,10 @@ export const registerUser = async (req, res) => {
     try {
         const { name, email, password, role } = req.body
 
+        if (!name || !email || !password || !role) {
+            return res.status(400).json({ message: "please provide all fields" })
+        }
+
         //check if user exists
         const existingUser = await User.findOne({ email })
         if (existingUser) {
@@ -13,8 +17,8 @@ export const registerUser = async (req, res) => {
         }
 
         //password validation
-        if (password.length < 8) {
-            return res.status(400).json({ message: "password must be at least 8 characters long" })
+        if (password.length < 6) {
+            return res.status(400).json({ message: "password must be at least 6 characters long" })
         }
 
         //email validation
@@ -48,6 +52,10 @@ export const registerUser = async (req, res) => {
 export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body
+
+        if (!email || !password) {
+            return res.status(400).json({ message: "please provide email and password" })
+        }
 
         //check if user exists
         const user = await User.findOne({ email })
@@ -96,7 +104,7 @@ export const logoutUser = async (req, res) => {
 }
 
 export const getMe = async (req, res) => {
-    if(!req.user){
+    if (!req.user) {
         return res.status(401).json({ message: "unauthorized" })
     }
     try {
