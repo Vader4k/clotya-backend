@@ -1,7 +1,7 @@
 import express from "express";
 import {
     getAllProducts,
-    getProduct,
+    getProductBySlug,
     getProductsByCategory,
     getProductsBySubCategory,
     getProductsBySearch,
@@ -9,12 +9,13 @@ import {
     updateProduct,
     deleteProduct
 } from "../controllers/productController.js";
-import { protect, admin } from "../middleware/verify-token.middleware.js";
+import { protect } from "../middleware/verify-token.middleware.js";
+import { admin } from "../middleware/admin.middleware.js";
 
 const router = express.Router();
 
 router.get("/", getAllProducts);
-router.get("/:slug", getProduct);
+router.get("/:slug", getProductBySlug);
 router.get("/category/:category", getProductsByCategory);
 router.get("/sub-category/:subCategory", getProductsBySubCategory);
 router.get("/search/:search", getProductsBySearch);

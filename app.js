@@ -4,6 +4,7 @@ import cors from 'cors'
 import authRoute from './routes/authRoute.js'
 import productRoute from './routes/productRoutes.js'
 import cartRoute from './routes/cartRoutes.js'
+import categoryRoute from './routes/categoryRoutes.js'
 
 const app = express()
 

@@ -12,6 +12,16 @@ export const registerUser = async (req, res) => {
             return res.status(400).json({ message: "user already exits" })
         }
 
+        //password validation
+        if (password.length < 8) {
+            return res.status(400).json({ message: "password must be at least 8 characters long" })
+        }
+
+        //email validation
+        if (!email.includes("@")) {
+            return res.status(400).json({ message: "invalid email" })
+        }
+
         //hash password
         const hashedPassword = await hashPassword(password)
 
