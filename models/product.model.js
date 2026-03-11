@@ -17,7 +17,7 @@ const productSchema = new mongoose.Schema(
 
         name: { type: String, required: true },
 
-        tags: [String],
+        tags: [{ type: mongoose.Schema.Types.ObjectId }],
 
         description: { type: String, required: true },
         shortDescription: { type: String, required: true },

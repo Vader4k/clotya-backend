@@ -5,6 +5,7 @@ import authRoute from './routes/authRoute.js'
 import productRoute from './routes/productRoutes.js'
 import cartRoute from './routes/cartRoutes.js'
 import categoryRoute from './routes/categoryRoutes.js'
+import publicRoute from './routes/publicRoutes.js'
 
 const app = express()
 
@@ -36,5 +37,8 @@ app.use("/api/cart", cartRoute)
 
 // category routes
 app.use("/api/categories", categoryRoute)
+
+// public routes
+app.use("/api/public", publicRoute)
 
 export default app
