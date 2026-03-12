@@ -1,7 +1,9 @@
 import express from "express";
-import { getAllCategories } from "../controllers/categoriesController.js";
+import { getAllCategoriesPublic } from "../controllers/categoriesController.js";
+import { getProductsByCategoryPublic } from "../controllers/productController.js";
 const router = express.Router();
 
-router.get("/categories", getAllCategories);
+router.get("/categories", getAllCategoriesPublic);
+router.get("/products/category/:category", getProductsByCategoryPublic);
 
 export default router;

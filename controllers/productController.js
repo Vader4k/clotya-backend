@@ -1,4 +1,5 @@
 import { Product } from "../models/product.model.js";
+import { Category } from "../models/category.model.js";
 
 export const getAllProducts = async (req, res) => {
     try {
@@ -87,9 +88,20 @@ export const getProductBySlug = async (req, res) => {
 
 export const getProductsByCategory = async (req, res) => {
     try {
-        const products = await Product.find({ category: req.params.category });
-        if (!products) {
-            return res.status(404).json({ message: "No products found" });
+        const categoryParam = req.params.category;
+        
+        if (!categoryParam.match(/^[0-9a-fA-F]{24}$/)) {
+            return res.status(404).json({ message: "Category not found" });
+        }
+
+        const category = await Category.findById(categoryParam);
+        if (!category) {
+            return res.status(404).json({ message: "Category not found" });
+        }
+
+        const products = await Product.find({ category: category._id });
+        if (!products || products.length === 0) {
+            return res.status(200).json({ message: "No products found for this category" });
         }
         res.status(200).json({
             success: true,
@@ -101,11 +113,19 @@ export const getProductsByCategory = async (req, res) => {
     }
 }
 
-export const getProductsBySubCategory = async (req, res) => {
+export const getProductsByCategoryPublic = async (req, res) => {
     try {
-        const products = await Product.find({ subCategory: req.params.subCategory });
-        if (!products) {
-            return res.status(404).json({ message: "No products found" });
+        const categoryParam = req.params.category;
+        
+        let category = await Category.findOne({ slug: categoryParam });
+
+        if (!category) {
+            return res.status(404).json({ message: "Category not found" });
+        }
+
+        const products = await Product.find({ category: category._id });
+        if (!products || products.length === 0) {
+            return res.status(200).json({ message: "No products found for this category", products: [] });
         }
         res.status(200).json({
             success: true,

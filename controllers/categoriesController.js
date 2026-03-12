@@ -38,6 +38,22 @@ export const getAllCategories = async (req, res) => {
     }
 }
 
+export const getAllCategoriesPublic = async (req, res) => {
+    try {
+        const categories = await Category.find({ isActive: true }).select("name slug items description tags");
+        if (!categories || categories.length === 0) {
+            return res.status(200).json({ message: "No categories found", categories: [] });
+        }
+        res.status(200).json({
+            success: true,
+            message: "Categories fetched successfully",
+            categories
+        });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
 export const getCategoryTags = async (req, res) => {
     try {
         const category = await Category.findById(req.params.id).select("tags name");
