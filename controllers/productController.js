@@ -1,6 +1,6 @@
 import { Product } from "../models/product.model.js";
 import { Category } from "../models/category.model.js";
-import { uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
+import {  deleteFromCloudinary, uploadFromBuffer } from "../utils/cloudinary.js";
 
 export const getAllProducts = async (req, res) => {
     try {
@@ -20,7 +20,7 @@ export const getAllProducts = async (req, res) => {
             .limit(Number(limit));
 
         if (!products || products.length === 0) {
-            return res.status(200).json({ success: true, message: "No products found", products: [] });
+            return res.status(200).json({ success: true, message: "No products found", products: [], pagination: { totalProducts: 0, currentPage: 1, totalPages: 0, limit: Number(limit) } });
         }
 
         const totalProducts = await Product.countDocuments(query);
@@ -95,7 +95,7 @@ export const getAllProductsPublic = async (req, res) => {
             .limit(Number(limit));
 
         if (!products || products.length === 0) {
-            return res.status(200).json({ success: true, message: "No products found", products: [] });
+            return res.status(200).json({ success: true, message: "No products found", products: [], pagination: { totalProducts: 0, currentPage: 1, totalPages: 0, limit: Number(limit) } });
         }
 
         const totalProducts = await Product.countDocuments(query);
@@ -201,19 +201,28 @@ export const getProductsBySearch = async (req, res) => {
 
 export const addProduct = async (req, res) => {
     try {
-        const { images, ...productData } = req.body;
+        const { ...productData } = req.body;
         let imageUrls = [];
 
-        // Handle multiple images from array
-        if (images && Array.isArray(images)) {
-            for (const img of images) {
-                const uploadedUrl = await uploadToCloudinary(img, 'clotya');
+        // Handle multiple images from files (FormData)
+        if (req.files && Array.isArray(req.files)) {
+            for (const file of req.files) {
+                const uploadedUrl = await uploadFromBuffer(file.buffer, 'clotya');
                 if (uploadedUrl) imageUrls.push(uploadedUrl);
             }
         }
 
+        // Parse JSON strings if fields are sent as such via FormData
+        const parsedProductData = { ...productData };
+        if (typeof productData.inventory === 'string') parsedProductData.inventory = JSON.parse(productData.inventory);
+        if (typeof productData.colors === 'string') parsedProductData.colors = JSON.parse(productData.colors);
+        if (typeof productData.tags === 'string') parsedProductData.tags = JSON.parse(productData.tags);
+        if (productData.price) parsedProductData.price = Number(productData.price);
+        if (productData.discountPrice) parsedProductData.discountPrice = Number(productData.discountPrice);
+        if (productData.discountPercentage) parsedProductData.discountPercentage = Number(productData.discountPercentage);
+
         const product = new Product({
-            ...productData,
+            ...parsedProductData,
             images: imageUrls
         });
 
@@ -230,39 +239,46 @@ export const addProduct = async (req, res) => {
 
 export const updateProduct = async (req, res) => {
     try {
-        const { images, ...updateData } = req.body;
+        const { existingImages, ...updateData } = req.body;
         const product = await Product.findById(req.params.id);
 
         if (!product) {
             return res.status(404).json({ success: false, message: "Product not found" });
         }
 
-        let newImageUrls = [...(product.images || [])];
-
-        // Handle image updates from array
-        if (images && Array.isArray(images)) {
-            const uploadedUrls = [];
-            for (const img of images) {
-                if (typeof img === 'string' && img.startsWith('data:')) {
-                    const uploadedUrl = await uploadToCloudinary(img, 'clotya');
-                    if (uploadedUrl) uploadedUrls.push(uploadedUrl);
-                } else if (typeof img === 'string' && img.startsWith('http')) {
-                    uploadedUrls.push(img);
-                }
-            }
-
-            // Identify images to delete from Cloudinary
-            const imagesToDelete = product.images.filter(url => !uploadedUrls.includes(url));
-            for (const url of imagesToDelete) {
-                await deleteFromCloudinary(url);
-            }
-
-            newImageUrls = uploadedUrls;
+        let currentImages = [];
+        if (existingImages) {
+            currentImages = typeof existingImages === 'string' ? JSON.parse(existingImages) : existingImages;
         }
+
+        let newImageUrls = [...currentImages];
+
+        // Handle new image uploads from files (FormData)
+        if (req.files && Array.isArray(req.files)) {
+            for (const file of req.files) {
+                const uploadedUrl = await uploadFromBuffer(file.buffer, 'clotya');
+                if (uploadedUrl) newImageUrls.push(uploadedUrl);
+            }
+        }
+
+        // Identify images to delete from Cloudinary (those not in newImageUrls)
+        const imagesToDelete = product.images.filter(url => !newImageUrls.includes(url));
+        for (const url of imagesToDelete) {
+            await deleteFromCloudinary(url);
+        }
+
+        // Parse JSON strings for nested fields
+        const parsedUpdateData = { ...updateData };
+        if (typeof updateData.inventory === 'string') parsedUpdateData.inventory = JSON.parse(updateData.inventory);
+        if (typeof updateData.colors === 'string') parsedUpdateData.colors = JSON.parse(updateData.colors);
+        if (typeof updateData.tags === 'string') parsedUpdateData.tags = JSON.parse(updateData.tags);
+        if (updateData.price) parsedUpdateData.price = Number(updateData.price);
+        if (updateData.discountPrice) parsedUpdateData.discountPrice = Number(updateData.discountPrice);
+        if (updateData.discountPercentage) parsedUpdateData.discountPercentage = Number(updateData.discountPercentage);
 
         const updatedProduct = await Product.findByIdAndUpdate(
             req.params.id,
-            { ...updateData, images: newImageUrls },
+            { ...parsedUpdateData, images: newImageUrls },
             { new: true }
         );
 

@@ -10,7 +10,29 @@ cloudinary.config({
 });
 
 /**
- * Uploads an image to Cloudinary.
+ * Uploads an image to Cloudinary from a file buffer.
+ * @param {Buffer} buffer - File buffer from multer.
+ * @param {string} folder - Optional folder name in Cloudinary.
+ * @returns {Promise<string>} The secure URL of the uploaded image.
+ */
+export const uploadFromBuffer = (buffer, folder = 'products') => {
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            { folder: folder, resource_type: 'auto' },
+            (error, result) => {
+                if (error) {
+                    console.error('Cloudinary upload_stream error:', error);
+                    return reject(new Error('Failed to upload image buffer to Cloudinary'));
+                }
+                resolve(result.secure_url);
+            }
+        );
+        uploadStream.end(buffer);
+    });
+};
+
+/**
+ * Uploads an image to Cloudinary (Base64 or URL).
  * @param {string} fileData - Base64 string or file buffer.
  * @param {string} folder - Optional folder name in Cloudinary.
  * @returns {Promise<string>} The secure URL of the uploaded image.
