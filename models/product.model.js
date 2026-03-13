@@ -28,6 +28,7 @@ const productSchema = new mongoose.Schema(
 
         images: [String],
 
+        isDiscount: { type: Boolean, default: false },
         isBestSeller: { type: Boolean, default: false },
         isFeatured: { type: Boolean, default: false },
         isNewArrival: { type: Boolean, default: false },
@@ -48,6 +49,19 @@ const productSchema = new mongoose.Schema(
     { timestamps: true }
 )
 
-productSchema.index({ category: 1, price: 1, slug: 1, name: 1, colors: 1, tags: 1, isBestSeller: 1, isFeatured: 1, isNewArrival: 1, isTrending: 1, sold: 1 })
+// Text search index
+productSchema.index({ name: 'text', description: 'text', shortDescription: 'text' });
+
+// Query optimization indexes
+productSchema.index({ category: 1 });
+productSchema.index({ tags: 1 });
+productSchema.index({ "colors.name": 1 });
+productSchema.index({ price: 1 });
+productSchema.index({ isBestSeller: 1 });
+productSchema.index({ isFeatured: 1 });
+productSchema.index({ isNewArrival: 1 });
+productSchema.index({ isTrending: 1 });
+productSchema.index({ sold: -1 });
+productSchema.index({ createdAt: -1 });
 
 export const Product = mongoose.model("Product", productSchema);

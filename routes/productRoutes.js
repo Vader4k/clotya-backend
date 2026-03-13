@@ -13,10 +13,10 @@ import { admin } from "../middleware/admin.middleware.js";
 
 const router = express.Router();
 
-router.get("/", getAllProducts);
-router.get("/:slug", getProductBySlug);
-router.get("/category/:category", getProductsByCategory);
-router.get("/search/:search", getProductsBySearch);
+router.get("/", protect, admin, getAllProducts);
+router.get("/:slug", protect, admin, getProductBySlug);
+router.get("/category/:category", protect, admin, getProductsByCategory);
+router.get("/search/:search", protect, admin, getProductsBySearch);
 router.post("/", protect, admin, addProduct);
 router.put("/:id", protect, admin, updateProduct);
 router.delete("/:id", protect, admin, deleteProduct);
