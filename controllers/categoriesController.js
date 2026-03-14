@@ -12,6 +12,14 @@ export const getAllCategories = async (req, res) => {
                 }
             },
             {
+                $lookup: {
+                    from: "tags",
+                    localField: "tags",
+                    foreignField: "_id",
+                    as: "tags"
+                }
+            },
+            {
                 $addFields: {
                     items: { $size: "$categoryProducts" }
                 }
@@ -50,6 +58,14 @@ export const getAllCategoriesPublic = async (req, res) => {
                     localField: "_id",
                     foreignField: "category",
                     as: "categoryProducts"
+                }
+            },
+            {
+                $lookup: {
+                    from: "tags",
+                    localField: "tags",
+                    foreignField: "_id",
+                    as: "tags"
                 }
             },
             {
@@ -101,7 +117,26 @@ export const getCategoryTags = async (req, res) => {
 export const addCategory = async (req, res) => {
     try {
         const { name, slug, description, isActive, tags } = req.body;
-        const category = await Category.create({ name, slug, description, isActive, tags });
+
+        // Process tags: find existing or create new ones
+        let tagIds = [];
+        if (tags && Array.isArray(tags)) {
+            for (const tagName of tags) {
+                // Determine if tagName is an ID (from existing tag) or a new string
+                let tag;
+                if (mongoose.Types.ObjectId.isValid(tagName)) {
+                    tag = await mongoose.model("Tag").findById(tagName);
+                } else {
+                    tag = await mongoose.model("Tag").findOne({ name: tagName });
+                    if (!tag) {
+                        tag = await mongoose.model("Tag").create({ name: tagName });
+                    }
+                }
+                if (tag) tagIds.push(tag._id);
+            }
+        }
+
+        const category = await Category.create({ name, slug, description, isActive, tags: tagIds });
         res.status(201).json({
             success: true,
             message: "Category added successfully",
@@ -115,7 +150,25 @@ export const addCategory = async (req, res) => {
 export const updateCategory = async (req, res) => {
     try {
         const { name, slug, description, isActive, tags } = req.body;
-        const category = await Category.findByIdAndUpdate(req.params.id, { name, slug, description, isActive, tags }, { new: true });
+
+        // Process tags: find existing or create new ones
+        let tagIds = [];
+        if (tags && Array.isArray(tags)) {
+            for (const tagName of tags) {
+                let tag;
+                if (mongoose.Types.ObjectId.isValid(tagName)) {
+                    tag = await mongoose.model("Tag").findById(tagName);
+                } else {
+                    tag = await mongoose.model("Tag").findOne({ name: tagName });
+                    if (!tag) {
+                        tag = await mongoose.model("Tag").create({ name: tagName });
+                    }
+                }
+                if (tag) tagIds.push(tag._id);
+            }
+        }
+
+        const category = await Category.findByIdAndUpdate(req.params.id, { name, slug, description, isActive, tags: tagIds }, { new: true });
         res.status(200).json({
             success: true,
             message: "Category updated successfully",

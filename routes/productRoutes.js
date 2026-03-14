@@ -1,7 +1,6 @@
 import express from "express";
 import {
     getAllProducts,
-    getProductBySlug,
     getProductsByCategory,
     getProductsBySearch,
     addProduct,
@@ -15,7 +14,6 @@ import { upload } from "../middleware/upload.middleware.js";
 const router = express.Router();
 
 router.get("/", protect, admin, getAllProducts);
-router.get("/:slug", protect, admin, getProductBySlug);
 router.get("/category/:category", protect, admin, getProductsByCategory);
 router.get("/search/:search", protect, admin, getProductsBySearch);
 router.post("/", protect, admin, upload.array('images', 10), addProduct);

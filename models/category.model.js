@@ -11,9 +11,10 @@ const categorySchema = new mongoose.Schema(
         description: { type: String, require: true },
         isActive: { type: Boolean, default: true },
         items: { type: Number, default: 0 },
-        tags: { type: [tagSchema], default: [] },
+        tags: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tag" }],
     },
     { timestamps: true }
 )
 
+export const Tag = mongoose.model("Tag", tagSchema);
 export const Category = mongoose.model("Category", categorySchema);

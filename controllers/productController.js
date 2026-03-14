@@ -1,6 +1,6 @@
 import { Product } from "../models/product.model.js";
 import { Category } from "../models/category.model.js";
-import {  deleteFromCloudinary, uploadFromBuffer } from "../utils/cloudinary.js";
+import { deleteFromCloudinary, uploadFromBuffer } from "../utils/cloudinary.js";
 
 export const getAllProducts = async (req, res) => {
     try {
@@ -15,6 +15,7 @@ export const getAllProducts = async (req, res) => {
 
         const products = await Product.find(query)
             .populate("category", "name")
+            .populate("tags", "name")
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(Number(limit));
@@ -90,9 +91,11 @@ export const getAllProductsPublic = async (req, res) => {
 
         const products = await Product.find(query)
             .populate("category", "name")
+            .populate("tags", "name")
             .sort(sortOption)
             .skip(skip)
-            .limit(Number(limit));
+            .limit(Number(limit))
+            .select("-__v -createdAt -updatedAt");
 
         if (!products || products.length === 0) {
             return res.status(200).json({ success: true, message: "No products found", products: [], pagination: { totalProducts: 0, currentPage: 1, totalPages: 0, limit: Number(limit) } });
@@ -116,9 +119,12 @@ export const getAllProductsPublic = async (req, res) => {
     }
 }
 
-export const getProductBySlug = async (req, res) => {
+export const getProductBySlugPublic = async (req, res) => {
     try {
-        const product = await Product.findOne({ slug: req.params.slug }).populate("category", "name");
+        const product = await Product.findOne({ slug: req.params.slug })
+            .populate("category", "name")
+            .populate("tags", "name")
+            .lean().select("-__v -createdAt -updatedAt");
         if (!product) {
             return res.status(404).json({ success: false, message: "Product not found" });
         }
@@ -145,7 +151,10 @@ export const getProductsByCategory = async (req, res) => {
             return res.status(404).json({ success: false, message: "Category not found" });
         }
 
-        const products = await Product.find({ category: category._id }).populate("category", "name");
+        const products = await Product.find({ category: category._id })
+            .populate("category", "name")
+            .populate("tags", "name")
+            .select("-__v -createdAt -updatedAt");
         if (!products || products.length === 0) {
             return res.status(200).json({ success: true, message: "No products found for this category", products: [] });
         }
@@ -169,7 +178,12 @@ export const getProductsByCategoryPublic = async (req, res) => {
             return res.status(404).json({ success: false, message: "Category not found" });
         }
 
-        const products = await Product.find({ category: category._id }).populate("category", "name").sort({ createdAt: -1 }).limit(12);
+        const products = await Product.find({ category: category._id })
+            .populate("category", "name")
+            .populate("tags", "name")
+            .select("-__v -createdAt -updatedAt")
+            .sort({ createdAt: -1 })
+            .limit(8);
         if (!products || products.length === 0) {
             return res.status(200).json({ success: true, message: "No products found for this category", products: [] });
         }
@@ -185,7 +199,10 @@ export const getProductsByCategoryPublic = async (req, res) => {
 
 export const getProductsBySearch = async (req, res) => {
     try {
-        const products = await Product.find({ $text: { $search: req.params.search } }).populate("category", "name");
+        const products = await Product.find({ $text: { $search: req.params.search } })
+            .populate("category", "name")
+            .populate("tags", "name")
+            .select("-__v -createdAt -updatedAt");
         if (!products) {
             return res.status(404).json({ success: false, message: "No products found" });
         }
@@ -322,6 +339,22 @@ export const deleteProduct = async (req, res) => {
             success: true,
             message: "Product deleted successfully",
             product
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+export const getBestSellerProducts = async (req, res) => {
+    try {
+        const products = await Product.find({ isBestSeller: true }).sort({ sold: -1 }).limit(4).select("-__v -createdAt -updatedAt");
+        if (!products || products.length === 0) {
+            return res.status(200).json({ success: true, message: "No products found", products: [] });
+        }
+        res.status(200).json({
+            success: true,
+            message: "Products fetched successfully",
+            products
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
