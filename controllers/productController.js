@@ -169,7 +169,7 @@ export const getProductsByCategoryPublic = async (req, res) => {
             return res.status(404).json({ success: false, message: "Category not found" });
         }
 
-        const products = await Product.find({ category: category._id }).populate("category", "name");
+        const products = await Product.find({ category: category._id }).populate("category", "name").sort({ createdAt: -1 }).limit(12);
         if (!products || products.length === 0) {
             return res.status(200).json({ success: true, message: "No products found for this category", products: [] });
         }
@@ -217,6 +217,7 @@ export const addProduct = async (req, res) => {
         if (typeof productData.inventory === 'string') parsedProductData.inventory = JSON.parse(productData.inventory);
         if (typeof productData.colors === 'string') parsedProductData.colors = JSON.parse(productData.colors);
         if (typeof productData.tags === 'string') parsedProductData.tags = JSON.parse(productData.tags);
+        if (typeof productData.category === 'string') parsedProductData.category = JSON.parse(productData.category);
         if (productData.price) parsedProductData.price = Number(productData.price);
         if (productData.discountPrice) parsedProductData.discountPrice = Number(productData.discountPrice);
         if (productData.discountPercentage) parsedProductData.discountPercentage = Number(productData.discountPercentage);
@@ -251,6 +252,13 @@ export const updateProduct = async (req, res) => {
             currentImages = typeof existingImages === 'string' ? JSON.parse(existingImages) : existingImages;
         }
 
+        // Handle case where existing images are sent in req.body.images (common with some frontend implementations)
+        if (req.body.images) {
+            const bodyImages = Array.isArray(req.body.images) ? req.body.images : [req.body.images];
+            const urlsFromLinks = bodyImages.filter(img => typeof img === 'string' && img.startsWith('http'));
+            currentImages = [...new Set([...currentImages, ...urlsFromLinks])];
+        }
+
         let newImageUrls = [...currentImages];
 
         // Handle new image uploads from files (FormData)
@@ -272,6 +280,7 @@ export const updateProduct = async (req, res) => {
         if (typeof updateData.inventory === 'string') parsedUpdateData.inventory = JSON.parse(updateData.inventory);
         if (typeof updateData.colors === 'string') parsedUpdateData.colors = JSON.parse(updateData.colors);
         if (typeof updateData.tags === 'string') parsedUpdateData.tags = JSON.parse(updateData.tags);
+        if (typeof updateData.category === 'string') parsedUpdateData.category = JSON.parse(updateData.category);
         if (updateData.price) parsedUpdateData.price = Number(updateData.price);
         if (updateData.discountPrice) parsedUpdateData.discountPrice = Number(updateData.discountPrice);
         if (updateData.discountPercentage) parsedUpdateData.discountPercentage = Number(updateData.discountPercentage);
