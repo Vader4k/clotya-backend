@@ -1,5 +1,5 @@
 import { Product } from "../models/product.model.js";
-import { Category } from "../models/category.model.js";
+import { Category, Tag } from "../models/category.model.js";
 import { deleteFromCloudinary, uploadFromBuffer } from "../utils/cloudinary.js";
 
 export const getAllProducts = async (req, res) => {
@@ -47,12 +47,13 @@ export const getAllProductsPublic = async (req, res) => {
     try {
         const {
             page = 1,
-            limit = 10,
+            limit = 16,
             tags,
             minPrice,
             maxPrice,
             sizes,
             colors,
+            category,
             sort
         } = req.query;
 
@@ -60,7 +61,12 @@ export const getAllProductsPublic = async (req, res) => {
 
         // Filtering by tags (comma separated string)
         if (tags) {
-            query.tags = { $in: tags.split(",") };
+            const tagNames = tags.split(",");
+            const foundTags = await Tag.find({ 
+                name: { $in: tagNames.map(name => new RegExp(`^${name.trim()}$`, "i")) } 
+            });
+            const tagIds = foundTags.map(tag => tag._id);
+            query.tags = { $in: tagIds.length > 0 ? tagIds : [new mongoose.Types.ObjectId()] };
         }
 
         // Filtering by price range
@@ -72,12 +78,22 @@ export const getAllProductsPublic = async (req, res) => {
 
         // Filtering by sizes (comma separated string)
         if (sizes) {
-            query["inventory.size"] = { $in: sizes.split(",") };
+            query["inventory.size"] = { $in: sizes.split(",").map(s => s.trim()) };
         }
 
         // Filtering by colors (comma separated string)
         if (colors) {
-            query["colors.name"] = { $in: colors.split(",") };
+            query["colors.name"] = { $in: colors.split(",").map(c => c.trim()) };
+        }
+
+        // Filtering by category (comma separated string of NAMES)
+        if (category) {
+            const categoryNames = category.split(",");
+            const foundCategories = await Category.find({ 
+                name: { $in: categoryNames.map(name => new RegExp(`^${name.trim()}$`, "i")) } 
+            });
+            const categoryIds = foundCategories.map(cat => cat._id);
+            query.category = { $in: categoryIds.length > 0 ? categoryIds : [new mongoose.Types.ObjectId()] };
         }
 
         // Building sorting options
@@ -85,6 +101,7 @@ export const getAllProductsPublic = async (req, res) => {
         if (sort === 'price_asc') sortOption = { price: 1 };
         if (sort === 'price_desc') sortOption = { price: -1 };
         if (sort === 'newest') sortOption = { createdAt: -1 };
+        if (sort === 'oldest') sortOption = { createdAt: 1 };
         if (sort === 'sold') sortOption = { sold: -1 };
 
         const skip = (Number(page) - 1) * Number(limit);
@@ -203,8 +220,8 @@ export const getProductsBySearch = async (req, res) => {
             .populate("category", "name")
             .populate("tags", "name")
             .select("-__v -createdAt -updatedAt");
-        if (!products) {
-            return res.status(404).json({ success: false, message: "No products found" });
+        if (!products || products.length === 0) {
+            return res.status(200).json({ success: true, message: "No products found", products: [] });
         }
         res.status(200).json({
             success: true,
@@ -354,6 +371,43 @@ export const getBestSellerProducts = async (req, res) => {
         res.status(200).json({
             success: true,
             message: "Products fetched successfully",
+            products
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+export const getRelatedProducts = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const currentProduct = await Product.findById(id);
+        if (!currentProduct) {
+            return res.status(404).json({ success: false, message: "Product not found" });
+        }
+
+        const products = await Product.aggregate([
+            {
+                $match: {
+                    _id: { $ne: currentProduct._id },
+                    $or: [
+                        { category: { $in: currentProduct.category } },
+                        { tags: { $in: currentProduct.tags } }
+                    ]
+                }
+            },
+            { $sample: { size: 4 } },
+            { $project: { __v: 0, createdAt: 0, updatedAt: 0 } }
+        ]);
+
+        if (!products || products.length === 0) {
+            return res.status(200).json({ success: true, message: "No related products found", products: [] });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Related products fetched successfully",
             products
         });
     } catch (error) {
