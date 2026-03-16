@@ -5,6 +5,7 @@ import authRoute from './routes/authRoute.js'
 import productRoute from './routes/productRoutes.js'
 import cartRoute from './routes/cartRoutes.js'
 import categoryRoute from './routes/categoryRoutes.js'
+import blogRoute from './routes/blogRoute.js'
 import publicRoute from './routes/publicRoutes.js'
 
 const app = express()
@@ -37,6 +38,9 @@ app.use("/api/cart", cartRoute)
 
 // category routes
 app.use("/api/categories", categoryRoute)
+
+// blog routes
+app.use("/api/blogs", blogRoute)
 
 // public routes
 app.use("/api/public", publicRoute)

@@ -112,7 +112,7 @@ export const getAllProductsPublic = async (req, res) => {
             .sort(sortOption)
             .skip(skip)
             .limit(Number(limit))
-            .select("-__v -createdAt -updatedAt");
+            .select("-__v -createdAt");
 
         if (!products || products.length === 0) {
             return res.status(200).json({ success: true, message: "No products found", products: [], pagination: { totalProducts: 0, currentPage: 1, totalPages: 0, limit: Number(limit) } });
