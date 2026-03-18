@@ -8,7 +8,8 @@ export const attachCartId = (req, res, next) => {
             httpOnly: true,
             maxAge: 60 * 60 * 24 * 30 * 1000,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "lax"
+            sameSite: "none",
+            secure: true
         })
         req.cartId = newCartId
     } else {
