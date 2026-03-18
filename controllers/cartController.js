@@ -2,15 +2,10 @@ import { Cart } from "../models/cart.model.js";
 
 export const addToCart = async (req, res) => {
     try {
-        const { productId, sku, quantity, size } = req.body;
-        let cart
-
-        //logged in user
-        if (req.user) {
-            cart = await Cart.findOne({ user: req.user._id })
-        } else {
-            cart = await Cart.findOne({ cartId: req.cartId })
-        }
+        const { product, sku, quantity, size, color } = req.body;
+        let cart = req.user
+            ? await Cart.findOne({ user: req.user._id })
+            : await Cart.findOne({ cartId: req.cartId })
 
         //if no cart
         if (!cart) {
@@ -22,16 +17,22 @@ export const addToCart = async (req, res) => {
         }
 
         // check if item already exits in cart
-        const existingItem = cart.items.find(item => item.sku === sku && item.product.toString() === productId && item.size === size)
+        const existingItem = cart.items.find(item => 
+            item.sku === sku && 
+            item.product.toString() === product && 
+            item.size === size && 
+            (item.color || null) === (color || null)
+        )
 
         if (existingItem) {
             existingItem.quantity += quantity
         } else {
             cart.items.push({
-                product: productId,
+                product,
                 sku,
                 quantity,
-                size
+                size,
+                color
             })
         }
 
