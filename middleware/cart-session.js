@@ -9,7 +9,6 @@ export const attachCartId = (req, res, next) => {
             maxAge: 60 * 60 * 24 * 30 * 1000,
             secure: process.env.NODE_ENV === "production",
             sameSite: "none",
-            secure: true
         })
         req.cartId = newCartId
     } else {
