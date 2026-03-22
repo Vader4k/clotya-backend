@@ -17,10 +17,10 @@ export const addToCart = async (req, res) => {
         }
 
         // check if item already exits in cart
-        const existingItem = cart.items.find(item => 
-            item.sku === sku && 
-            item.product.toString() === product && 
-            item.size === size && 
+        const existingItem = cart.items.find(item =>
+            item.sku === sku &&
+            item.product.toString() === product &&
+            item.size === size &&
             (item.color || null) === (color || null)
         )
 
@@ -59,9 +59,9 @@ export const getCart = async (req, res) => {
         let cart
 
         if (req.user) {
-            cart = await Cart.findOne({ user: req.user._id }).populate("items.product", "name images price discountPrice slug")
+            cart = await Cart.findOne({ user: req.user._id }).populate("items.product", "name images price discountPrice slug inventory")
         } else {
-            cart = await Cart.findOne({ cartId: req.cartId }).populate("items.product", "name images price discountPrice slug")
+            cart = await Cart.findOne({ cartId: req.cartId }).populate("items.product", "name images price discountPrice slug inventory")
         }
 
         if (!cart) {
@@ -73,7 +73,25 @@ export const getCart = async (req, res) => {
         }
 
         const cartObj = cart.toObject();
+
         cartObj.items = cartObj.items.map(item => {
+
+            //check if items are still available (ie quanitity is enough in store)
+            if (item.product && item.product.inventory) {
+                const inventoryItem = item.product.inventory.find(i => i.size === item.size);
+                const availableQuantity = inventoryItem ? inventoryItem.quantity : 0;
+                
+                item.isAvailable = availableQuantity > 0;
+                item.availableQuantity = availableQuantity;
+
+                if (item.quantity > availableQuantity) {
+                    item.quantity = availableQuantity;
+                }
+            } else {
+                item.isAvailable = false;
+                item.availableQuantity = 0;
+            }
+
             if (item.product) {
                 const effectivePrice = item.product.discountPrice > 0
                     ? item.product.discountPrice
