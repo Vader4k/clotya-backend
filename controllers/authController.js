@@ -77,10 +77,13 @@ export const loginUser = async (req, res) => {
         )
 
         //set http only cookie
+        const isSecure = process.env.NODE_ENV === "production" || req.secure || req.get("x-forwarded-proto") === "https";
+
+        //set http only cookie
         res.cookie("token", token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "none",
+            secure: isSecure,
+            sameSite: isSecure ? "none" : "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000,
             path: "/"
         })
