@@ -10,7 +10,7 @@ export const attachCartId = (req, res, next) => {
             httpOnly: true,
             maxAge: 60 * 60 * 24 * 30 * 1000,
             secure: isSecure,
-            sameSite: isSecure ? "none" : "lax",
+            sameSite: "lax",
             path: "/",
         })
         req.cartId = newCartId
