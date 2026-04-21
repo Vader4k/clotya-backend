@@ -368,7 +368,6 @@ export const deleteProduct = async (req, res) => {
         res.status(200).json({
             success: true,
             message: "Product deleted successfully",
-            product
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
