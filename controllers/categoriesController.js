@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { Category } from "../models/category.model.js";
 
 export const getAllCategories = async (req, res) => {
@@ -121,12 +122,15 @@ export const addCategory = async (req, res) => {
         // Process tags: find existing or create new ones
         let tagIds = [];
         if (tags && Array.isArray(tags)) {
-            for (const tagName of tags) {
+            for (let tagName of tags) {
+                if (typeof tagName === 'object' && tagName !== null) {
+                    tagName = tagName._id || tagName.name;
+                }
                 // Determine if tagName is an ID (from existing tag) or a new string
                 let tag;
                 if (mongoose.Types.ObjectId.isValid(tagName)) {
                     tag = await mongoose.model("Tag").findById(tagName);
-                } else {
+                } else if (tagName) {
                     tag = await mongoose.model("Tag").findOne({ name: tagName });
                     if (!tag) {
                         tag = await mongoose.model("Tag").create({ name: tagName });
@@ -154,11 +158,14 @@ export const updateCategory = async (req, res) => {
         // Process tags: find existing or create new ones
         let tagIds = [];
         if (tags && Array.isArray(tags)) {
-            for (const tagName of tags) {
+            for (let tagName of tags) {
+                if (typeof tagName === 'object' && tagName !== null) {
+                    tagName = tagName._id || tagName.name;
+                }
                 let tag;
                 if (mongoose.Types.ObjectId.isValid(tagName)) {
                     tag = await mongoose.model("Tag").findById(tagName);
-                } else {
+                } else if (tagName) {
                     tag = await mongoose.model("Tag").findOne({ name: tagName });
                     if (!tag) {
                         tag = await mongoose.model("Tag").create({ name: tagName });

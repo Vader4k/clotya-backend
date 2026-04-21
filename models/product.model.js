@@ -1,7 +1,9 @@
 import mongoose from "mongoose";
 
+const validSizes = ["s", "m", "l", "xl", "xxl"];
+
 const inventorySchema = new mongoose.Schema({
-    size: { type: String, required: true },
+    size: { type: String, required: true, enum: validSizes },
     quantity: { type: Number, required: true }
 })
 

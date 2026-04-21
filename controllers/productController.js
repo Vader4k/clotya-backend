@@ -249,6 +249,13 @@ export const addProduct = async (req, res) => {
         // Parse JSON strings if fields are sent as such via FormData
         const parsedProductData = { ...productData };
         if (typeof productData.inventory === 'string') parsedProductData.inventory = JSON.parse(productData.inventory);
+        if (parsedProductData.inventory && Array.isArray(parsedProductData.inventory)) {
+            parsedProductData.inventory = parsedProductData.inventory.map(item => ({
+                ...item,
+                size: item.size.toLowerCase(),
+                quantity: Number(item.quantity)
+            }));
+        }
         if (typeof productData.colors === 'string') parsedProductData.colors = JSON.parse(productData.colors);
         if (typeof productData.tags === 'string') parsedProductData.tags = JSON.parse(productData.tags);
         if (typeof productData.category === 'string') parsedProductData.category = JSON.parse(productData.category);
@@ -312,6 +319,12 @@ export const updateProduct = async (req, res) => {
         // Parse JSON strings for nested fields
         const parsedUpdateData = { ...updateData };
         if (typeof updateData.inventory === 'string') parsedUpdateData.inventory = JSON.parse(updateData.inventory);
+        if (parsedUpdateData.inventory && Array.isArray(parsedUpdateData.inventory)) {
+            parsedUpdateData.inventory = parsedUpdateData.inventory.map(item => ({
+                ...item,
+                size: item.size ? item.size.toLowerCase() : item.size
+            }));
+        }
         if (typeof updateData.colors === 'string') parsedUpdateData.colors = JSON.parse(updateData.colors);
         if (typeof updateData.tags === 'string') parsedUpdateData.tags = JSON.parse(updateData.tags);
         if (typeof updateData.category === 'string') parsedUpdateData.category = JSON.parse(updateData.category);
